@@ -7,12 +7,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req: Request, res: Response) => {
-    console.log(process.env.OPENAI_API_KEY);
-    res.send('Hello world!!!!')
-})
+   console.log(process.env.OPENAI_API_KEY);
+   res.send('Hello world!!!!');
+});
 
 app.get('/api/hello', (req: Request, res: Response) => {
-    res.json({message: 'helo world!'})
-})
+   res.json({ message: 'helo world!' });
+});
 
-app.listen(PORT, () => console.log(`Server running on PORT: ${PORT}`))
+app.listen(PORT, () => console.log(`Server running on PORT: ${PORT}`));
