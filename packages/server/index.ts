@@ -12,8 +12,10 @@ app.get('/api/health', (req: Request, res: Response) => {
    res.json({ message: '✅ health check success 🩺' });
 });
 
+const conversations = new Map<string, string>();
+
 app.post('/api/chats', async (req: Request, res: Response) => {
-   const { prompt } = req.body;
+   const { prompt, conversation_id } = req.body;
 
    const client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -24,7 +26,10 @@ app.post('/api/chats', async (req: Request, res: Response) => {
       input: prompt,
       temperature: 0.3,
       max_output_tokens: 500,
+      previous_response_id: conversations.get(conversation_id),
    });
+
+   conversations.set(conversation_id, response.id);
 
    res.json({ message: response.output_text });
 });
