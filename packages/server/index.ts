@@ -1,18 +1,32 @@
 import express, { type Request, type Response } from 'express';
 import dotenv from 'dotenv';
+import OpenAI from 'openai';
 
 dotenv.config();
 
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
-app.get('/', (req: Request, res: Response) => {
-   console.log(process.env.OPENAI_API_KEY);
-   res.send('Hello world!!!!');
+app.get('/api/health', (req: Request, res: Response) => {
+   res.json({ message: '✅ health check success 🩺' });
 });
 
-app.get('/api/hello', (req: Request, res: Response) => {
-   res.json({ message: 'helo world!' });
+app.post('/api/chats', async (req: Request, res: Response) => {
+   const { prompt } = req.body;
+
+   const client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+   });
+
+   const response = await client.responses.create({
+      model: 'gpt-4o-mini',
+      input: prompt,
+      temperature: 0.3,
+      max_output_tokens: 500,
+   });
+
+   res.json({ message: response.output_text });
 });
 
 app.listen(PORT, () => console.log(`Server running on PORT: ${PORT}`));
