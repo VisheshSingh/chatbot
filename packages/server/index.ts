@@ -32,23 +32,29 @@ app.post('/api/chats', async (req: Request, res: Response) => {
       return;
    }
 
-   const { prompt, conversation_id } = req.body;
+   try {
+      const { prompt, conversation_id } = req.body;
 
-   const client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-   });
+      const client = new OpenAI({
+         apiKey: process.env.OPENAI_API_KEY,
+      });
 
-   const response = await client.responses.create({
-      model: 'gpt-4o-mini',
-      input: prompt,
-      temperature: 0.3,
-      max_output_tokens: 500,
-      previous_response_id: conversations.get(conversation_id),
-   });
+      const response = await client.responses.create({
+         model: 'gpt-4o-mini',
+         input: prompt,
+         temperature: 0.3,
+         max_output_tokens: 500,
+         previous_response_id: conversations.get(conversation_id),
+      });
 
-   conversations.set(conversation_id, response.id);
+      conversations.set(conversation_id, response.id);
 
-   res.json({ message: response.output_text });
+      res.json({ message: response.output_text });
+   } catch (error) {
+      res.status(500).json({
+         message: 'Server could not process your request. Try again later!',
+      });
+   }
 });
 
 app.listen(PORT, () => console.log(`Server running on PORT: ${PORT}`));
