@@ -9,7 +9,7 @@ const chatSchema = z.object({
       .trim()
       .min(1, 'Prompt is required')
       .max(1000, 'Prompt cannot exceed 1000 chars'),
-   conversation_id: z.uuid(),
+   conversationId: z.uuid(),
 });
 
 // PUBLIC INTERFACE
@@ -23,12 +23,9 @@ export const chatController = {
       }
 
       try {
-         const { prompt, conversation_id } = req.body;
+         const { prompt, conversationId } = req.body;
 
-         const response = await chatService.sendMessage(
-            prompt,
-            conversation_id
-         );
+         const response = await chatService.sendMessage(prompt, conversationId);
 
          res.json({ message: response.message });
       } catch (error) {
