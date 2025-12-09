@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { FaArrowUp } from 'react-icons/fa';
 import { Button } from './components/ui/button';
 import { useForm } from 'react-hook-form';
@@ -20,11 +20,20 @@ type Message = {
 
 const ChatBot = () => {
    const [messages, setMessages] = useState<Message[]>([]);
+   const [isBotTyping, setIsBotTyping] = useState(false);
+
    const conversationId = useRef(crypto.randomUUID()).current;
+   const formRef = useRef<HTMLFormElement | null>(null);
+
    const { register, reset, handleSubmit, formState } = useForm<FormData>();
+
+   useEffect(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth' });
+   }, [messages]);
 
    const onSubmit = async ({ prompt }: FormData) => {
       setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
+      setIsBotTyping(true);
       reset();
 
       const { data } = await axios.post<ChatResponse>('/api/chats', {
@@ -32,6 +41,7 @@ const ChatBot = () => {
          conversationId,
       });
       setMessages((prev) => [...prev, { content: data.message, role: 'bot' }]);
+      setIsBotTyping(false);
    };
 
    const onKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
@@ -52,8 +62,16 @@ const ChatBot = () => {
                   <ReactMarkdown>{msg.content}</ReactMarkdown>
                </p>
             ))}
+            {isBotTyping && (
+               <div className='flex gap-1 p-3 bg-gray-200 rounded-2xl self-start'>
+                  <div className='w-2 h-2 rounded-full bg-gray-800 text-black animate-pulse'></div>
+                  <div className='w-2 h-2 rounded-full bg-gray-800 text-black animate-pulse [animation-delay:0.2s]'></div>
+                  <div className='w-2 h-2 rounded-full bg-gray-800 text-black animate-pulse [animation-delay:0.4s]'></div>
+               </div>
+            )}
          </div>
          <form
+            ref={formRef}
             onSubmit={handleSubmit(onSubmit)}
             onKeyDown={onKeyDown}
             className='flex flex-col gap-2 items-end border-2 p-4 rounded-3xl'
