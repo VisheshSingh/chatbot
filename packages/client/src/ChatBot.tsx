@@ -21,6 +21,7 @@ type Message = {
 const ChatBot = () => {
    const [messages, setMessages] = useState<Message[]>([]);
    const [isBotTyping, setIsBotTyping] = useState(false);
+   const [error, setError] = useState('');
 
    const conversationId = useRef(crypto.randomUUID()).current;
    const lastMessageRef = useRef<HTMLDivElement | null>(null);
@@ -32,16 +33,25 @@ const ChatBot = () => {
    }, [messages]);
 
    const onSubmit = async ({ prompt }: FormData) => {
-      setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
-      setIsBotTyping(true);
-      reset({ prompt: '' });
+      try {
+         setError('');
+         setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
+         setIsBotTyping(true);
+         reset({ prompt: '' });
 
-      const { data } = await axios.post<ChatResponse>('/api/chats', {
-         prompt,
-         conversationId,
-      });
-      setMessages((prev) => [...prev, { content: data.message, role: 'bot' }]);
-      setIsBotTyping(false);
+         const { data } = await axios.post<ChatResponse>('/api/chats', {
+            prompt,
+            conversationId,
+         });
+         setMessages((prev) => [
+            ...prev,
+            { content: data.message, role: 'bot' },
+         ]);
+      } catch (error) {
+         setError('Something went wrong. Please try again.');
+      } finally {
+         setIsBotTyping(false);
+      }
    };
 
    const onKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
@@ -77,6 +87,11 @@ const ChatBot = () => {
                   <div className='w-2 h-2 rounded-full bg-gray-800 text-black animate-pulse'></div>
                   <div className='w-2 h-2 rounded-full bg-gray-800 text-black animate-pulse [animation-delay:0.2s]'></div>
                   <div className='w-2 h-2 rounded-full bg-gray-800 text-black animate-pulse [animation-delay:0.4s]'></div>
+               </div>
+            )}
+            {error && (
+               <div className='p-3 bg-red-200 text-red-800 rounded-2xl self-start'>
+                  {error}
                </div>
             )}
          </div>
