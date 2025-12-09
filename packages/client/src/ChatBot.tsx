@@ -1,4 +1,4 @@
-import { use, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FaArrowUp } from 'react-icons/fa';
 import { Button } from './components/ui/button';
 import { useForm } from 'react-hook-form';
@@ -23,18 +23,18 @@ const ChatBot = () => {
    const [isBotTyping, setIsBotTyping] = useState(false);
 
    const conversationId = useRef(crypto.randomUUID()).current;
-   const formRef = useRef<HTMLFormElement | null>(null);
+   const lastMessageRef = useRef<HTMLDivElement | null>(null);
 
    const { register, reset, handleSubmit, formState } = useForm<FormData>();
 
    useEffect(() => {
-      formRef.current?.scrollIntoView({ behavior: 'smooth' });
+      lastMessageRef.current?.scrollIntoView({ behavior: 'smooth' });
    }, [messages]);
 
    const onSubmit = async ({ prompt }: FormData) => {
       setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
       setIsBotTyping(true);
-      reset();
+      reset({ prompt: '' });
 
       const { data } = await axios.post<ChatResponse>('/api/chats', {
          prompt,
@@ -60,16 +60,17 @@ const ChatBot = () => {
    };
 
    return (
-      <div>
-         <div className='flex flex-col gap-2 mb-10'>
+      <div className='flex flex-col h-full'>
+         <div className='flex flex-col flex-1 gap-2 mb-10 overflow-y-auto'>
             {messages.map((msg, index) => (
-               <p
+               <div
+                  ref={index === messages.length - 1 ? lastMessageRef : null}
                   key={index}
                   onCopy={onCopy}
                   className={`px-3 py-2 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white self-end' : 'bg-gray-100 text-black self-start'}`}
                >
                   <ReactMarkdown>{msg.content}</ReactMarkdown>
-               </p>
+               </div>
             ))}
             {isBotTyping && (
                <div className='flex gap-1 p-3 bg-gray-200 rounded-2xl self-start'>
@@ -80,12 +81,12 @@ const ChatBot = () => {
             )}
          </div>
          <form
-            ref={formRef}
             onSubmit={handleSubmit(onSubmit)}
             onKeyDown={onKeyDown}
             className='flex flex-col gap-2 items-end border-2 p-4 rounded-3xl'
          >
             <textarea
+               autoFocus
                {...register('prompt', {
                   required: true,
                   validate: (value) => value.trim().length > 0,
